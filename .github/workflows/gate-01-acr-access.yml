@@ -1,0 +1,59 @@
+name: "Gate 01 — ACR Access"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'examples/**'
+      - '.github/workflows/gate-01-acr-access.yml'
+
+jobs:
+  acr-access:
+    name: "ACR Access Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check Marketplace SP has AcrPull on ACR
+        run: |
+          set -e
+          ACR_NAME="${{ vars.ACR_NAME }}"
+          SUB_ID="${{ vars.ACR_SUBSCRIPTION_ID }}"
+          MARKETPLACE_APP_ID="32597670-3e15-4def-8851-614ff48c1efa"
+
+          az account set --subscription "$SUB_ID"
+
+          # Verify SP exists in tenant
+          SP_OID=$(az ad sp show --id "$MARKETPLACE_APP_ID" --query id -o tsv 2>/dev/null || echo "")
+          if [ -z "$SP_OID" ]; then
+            echo "❌ Marketplace SP not found — run scripts/grant-acr-access.sh"
+            exit 1
+          fi
+          echo "✅ Marketplace SP: $SP_OID"
+
+          # Verify AcrPull assignment
+          ACR_ID=$(az acr show --name "$ACR_NAME" --subscription "$SUB_ID" --query id -o tsv)
+          ROLE=$(az role assignment list --assignee "$SP_OID" --scope "$ACR_ID" \
+            --query "[?roleDefinitionName=='AcrPull'].roleDefinitionName" -o tsv)
+          if [ -z "$ROLE" ]; then
+            echo "❌ AcrPull not assigned — run: scripts/grant-acr-access.sh"
+            exit 1
+          fi
+          echo "✅ AcrPull assigned to Marketplace SP on $ACR_NAME"
+
+      - name: Check PartnerCenterIngestion provider registered
+        run: |
+          SUB_ID="${{ vars.ACR_SUBSCRIPTION_ID }}"
+          STATE=$(az provider show -n Microsoft.PartnerCenterIngestion \
+            --subscription "$SUB_ID" --query registrationState -o tsv)
+          if [ "$STATE" != "Registered" ]; then
+            echo "❌ Microsoft.PartnerCenterIngestion not registered (state: $STATE)"
+            exit 1
+          fi
+          echo "✅ Microsoft.PartnerCenterIngestion: $STATE"

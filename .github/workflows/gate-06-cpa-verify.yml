@@ -1,0 +1,24 @@
+name: "Gate 06 — cpa verify"
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+jobs:
+  cpa-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: cpa verify (Microsoft official validator)
+        uses: addnab/docker-run-action@v3
+        with:
+          image: mcr.microsoft.com/container-package-app:latest
+          options: >
+            --platform linux/amd64
+            -v /var/run/docker.sock:/var/run/docker.sock
+            -v ${{ github.workspace }}:/data
+            --entrypoint "/bin/bash"
+          run: |
+            cd /data/${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
+            echo "=== Running cpa verify ==="
+            cpa verify
+            echo "✅ cpa verify passed"

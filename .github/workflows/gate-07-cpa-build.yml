@@ -1,0 +1,30 @@
+name: "Gate 07 — cpa buildbundle"
+on:
+  workflow_call:
+  push:
+    branches: [main]
+    paths: ['examples/**']
+jobs:
+  cpa-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build CNAB Bundle and Publish to ACR
+        uses: addnab/docker-run-action@v3
+        with:
+          image: mcr.microsoft.com/container-package-app:latest
+          options: >
+            --platform linux/amd64
+            -v /var/run/docker.sock:/var/run/docker.sock
+            -v ${{ github.workspace }}:/data
+            --entrypoint "/bin/bash"
+          run: |
+            cd /data/${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
+            echo ${{ secrets.ACR_TOKEN }} | \
+              docker login ${{ vars.ACR_NAME }}.azurecr.io \
+              -u 00000000-0000-0000-0000-000000000000 --password-stdin
+            cpa verify
+            cpa buildbundle
+            echo "✅ CNAB bundle built and pushed to ${{ vars.ACR_NAME }}"
+    outputs:
+      acr_tag: ${{ steps.cpa-build.outputs.acr_tag }}

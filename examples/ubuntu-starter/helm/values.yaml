@@ -1,0 +1,19 @@
+# All image references MUST use global.azure.images.* pattern
+# Microsoft will retag these to the public Marketplace ACR on publish
+global:
+  azure:
+    images:
+      ubuntuStarter:
+        registry: dcaicontaineroffers.azurecr.io
+        image: ubuntu-starter
+        tag: "porter-0.1.1"
+
+replicaCount: 1
+namespace: ubuntu-starter
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"

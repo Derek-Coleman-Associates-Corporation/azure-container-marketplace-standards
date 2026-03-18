@@ -1,0 +1,20 @@
+name: "Gate 04 — createUIDefinition"
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+jobs:
+  ui-definition:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate createUIDefinition.json
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          FILE="$OFFER_DIR/createUIDefinition.json"
+          python3 -c "import json,sys; d=json.load(open('$FILE')); \
+            assert 'outputs' in d, 'Missing outputs section'; \
+            assert d.get('\$schema','').startswith('https://schema.management.azure.com'), \
+              'Invalid schema'; \
+            print('✅ createUIDefinition.json valid'); \
+            print(f'  outputs keys: {list(d[\"outputs\"].keys())}')"

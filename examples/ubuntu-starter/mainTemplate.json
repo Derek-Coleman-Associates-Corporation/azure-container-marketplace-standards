@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "extensionResourceName": { "type": "string" },
+    "clusterResourceId": { "type": "string" },
+    "location": { "type": "string", "defaultValue": "[resourceGroup().location]" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KubernetesConfiguration/extensions",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('extensionResourceName')]",
+      "scope": "[parameters('clusterResourceId')]",
+      "kind": "ClusterExtension",
+      "properties": {
+        "extensionType": "dcassociatesgroup.ubuntustarter",
+        "autoUpgradeMinorVersion": true,
+        "releaseTrain": "stable"
+      }
+    }
+  ]
+}

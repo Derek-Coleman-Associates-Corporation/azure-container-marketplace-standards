@@ -1,0 +1,82 @@
+name: "Gate 02 — Artifact Structure"
+
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+
+jobs:
+  artifact-structure:
+    name: "Required CNAB Artifact Structure"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate all 4 required artifacts present
+        run: |
+          set -e
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          ERRORS=0
+
+          check_file() {
+            if [ ! -f "$OFFER_DIR/$1" ]; then
+              echo "❌ Missing: $OFFER_DIR/$1"
+              ERRORS=$((ERRORS+1))
+            else
+              echo "✅ Found: $OFFER_DIR/$1"
+            fi
+          }
+
+          check_dir() {
+            if [ ! -d "$OFFER_DIR/$1" ]; then
+              echo "❌ Missing directory: $OFFER_DIR/$1"
+              ERRORS=$((ERRORS+1))
+            else
+              echo "✅ Found: $OFFER_DIR/$1/"
+            fi
+          }
+
+          echo "=== Checking required artifacts in $OFFER_DIR ==="
+          check_file "manifest.yaml"
+          check_file "createUIDefinition.json"
+          check_file "mainTemplate.json"
+          check_dir  "helm"
+          check_file "helm/Chart.yaml"
+          check_file "helm/values.yaml"
+
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ $ERRORS required artifact(s) missing."
+            echo "See: https://aka.ms/K8sOfferManifest"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All required artifacts present"
+
+      - name: Validate manifest.yaml schema
+        run: |
+          pip -q install pyyaml
+          python3 scripts/validate-manifest.py "${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+
+      - name: Check manifest.yaml version format (#.#.#)
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          VERSION=$(python3 -c "import yaml; m=yaml.safe_load(open('$OFFER_DIR/manifest.yaml')); print(m.get('version',''))")
+          if echo "$VERSION" | grep -qP '^\d+\.\d+\.\d+$'; then
+            echo "✅ Version format valid: $VERSION"
+          else
+            echo "❌ Version '$VERSION' must be in #.#.# format"
+            exit 1
+          fi
+
+      - name: No linked ARM templates check
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          if grep -qi '"templateLink"' "$OFFER_DIR/mainTemplate.json" 2>/dev/null; then
+            echo "❌ Linked ARM templates are not supported"
+            exit 1
+          fi
+          echo "✅ No linked ARM templates detected"
+
+    outputs:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}

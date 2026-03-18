@@ -1,0 +1,14 @@
+name: "Gate 08 — Cluster Extension Type"
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+jobs:
+  cluster-ext-type:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate clusterExtensionType format
+        run: |
+          python3 scripts/validate-cluster-ext-type.py \
+            "${{ inputs.offer_dir || 'examples/ubuntu-starter' }}/manifest.yaml"

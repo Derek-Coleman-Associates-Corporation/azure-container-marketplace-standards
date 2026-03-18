@@ -1,0 +1,14 @@
+name: "Gate 05 — ARM Template Resource Types"
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+jobs:
+  arm-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate ARM resource types
+        run: |
+          python3 scripts/validate-arm-resources.py \
+            "${{ inputs.offer_dir || 'examples/ubuntu-starter' }}/mainTemplate.json"

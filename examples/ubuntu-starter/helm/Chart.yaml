@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ubuntu-starter
+description: Ubuntu 24.04 LTS Enterprise Edition — AKS-Optimised
+version: 0.1.2
+appVersion: "24.04"

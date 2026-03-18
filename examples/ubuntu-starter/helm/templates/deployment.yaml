@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ubuntu-starter
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: ubuntu-starter
+  template:
+    metadata:
+      labels:
+        app: ubuntu-starter
+    spec:
+      containers:
+        - name: ubuntu-starter
+          # Always reference via global.azure.images — Microsoft retags on publish
+          image: "{{ .Values.global.azure.images.ubuntuStarter.registry }}/{{ .Values.global.azure.images.ubuntuStarter.image }}:{{ .Values.global.azure.images.ubuntuStarter.tag }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

@@ -1,0 +1,25 @@
+name: "Gate 03 — Helm Lint"
+on:
+  workflow_call:
+  pull_request:
+    paths: ['examples/**']
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Helm lint
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          helm lint "$OFFER_DIR/helm" --strict
+          echo "✅ Helm lint passed"
+      - name: Helm template dry-run
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          helm template test "$OFFER_DIR/helm" --debug | head -50
+          echo "✅ Helm template dry-run passed"
+      - name: Check global.azure.images pattern
+        run: |
+          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
+          python3 scripts/validate-global-images.py "$OFFER_DIR"

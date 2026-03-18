@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [],
+    "steps": [
+      {
+        "name": "applicationDetails",
+        "label": "Application Details",
+        "elements": [
+          {
+            "name": "extensionResourceName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Extension Resource Name",
+            "defaultValue": "ubuntu-starter",
+            "constraints": {
+              "required": true,
+              "regex": "^[a-z0-9]{6,30}$",
+              "validationMessage": "Lowercase alphanumeric, 6-30 characters"
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "extensionResourceName": "[steps('applicationDetails').extensionResourceName]"
+    }
+  }
+}

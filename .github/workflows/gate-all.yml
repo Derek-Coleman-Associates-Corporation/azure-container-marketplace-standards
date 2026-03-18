@@ -1,0 +1,77 @@
+name: "🚦 All Gates — Marketplace Container Compliance"
+
+on:
+  pull_request:
+    paths: ['examples/**', 'standards/**', 'scripts/**']
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  gate-01-acr-access:
+    uses: ./.github/workflows/gate-01-acr-access.yml
+    secrets: inherit
+
+  gate-02-artifact-structure:
+    uses: ./.github/workflows/gate-02-artifact-structure.yml
+
+  gate-03-helm-lint:
+    needs: [gate-02-artifact-structure]
+    uses: ./.github/workflows/gate-03-helm-lint.yml
+
+  gate-04-ui-definition:
+    needs: [gate-02-artifact-structure]
+    uses: ./.github/workflows/gate-04-ui-definition.yml
+
+  gate-05-arm-template:
+    needs: [gate-02-artifact-structure]
+    uses: ./.github/workflows/gate-05-arm-template.yml
+
+  gate-06-cpa-verify:
+    needs: [gate-02-artifact-structure, gate-03-helm-lint, gate-04-ui-definition, gate-05-arm-template]
+    uses: ./.github/workflows/gate-06-cpa-verify.yml
+
+  gate-07-cpa-build:
+    needs: [gate-06-cpa-verify]
+    uses: ./.github/workflows/gate-07-cpa-build.yml
+    secrets: inherit
+
+  gate-08-cluster-ext-type:
+    uses: ./.github/workflows/gate-08-cluster-ext-type.yml
+
+  gate-09-pc-api-schema:
+    needs: [gate-07-cpa-build, gate-08-cluster-ext-type]
+    uses: ./.github/workflows/gate-09-pc-api-schema.yml
+    secrets: inherit
+
+  gate-10-offer-listing:
+    uses: ./.github/workflows/gate-10-offer-listing.yml
+    secrets: inherit
+
+  all-gates-pass:
+    name: "✅ All Marketplace Gates Passed"
+    needs:
+      - gate-01-acr-access
+      - gate-07-cpa-build
+      - gate-08-cluster-ext-type
+      - gate-09-pc-api-schema
+      - gate-10-offer-listing
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all gates passed
+        run: |
+          echo "Gate 01 (ACR Access):      ${{ needs.gate-01-acr-access.result }}"
+          echo "Gate 07 (cpa buildbundle): ${{ needs.gate-07-cpa-build.result }}"
+          echo "Gate 08 (ExtType):         ${{ needs.gate-08-cluster-ext-type.result }}"
+          echo "Gate 09 (PC API Schema):   ${{ needs.gate-09-pc-api-schema.result }}"
+          echo "Gate 10 (Offer Listing):   ${{ needs.gate-10-offer-listing.result }}"
+          if [[ "${{ needs.gate-01-acr-access.result }}" == "failure" || \
+                "${{ needs.gate-07-cpa-build.result }}" == "failure" || \
+                "${{ needs.gate-08-cluster-ext-type.result }}" == "failure" || \
+                "${{ needs.gate-09-pc-api-schema.result }}" == "failure" || \
+                "${{ needs.gate-10-offer-listing.result }}" == "failure" ]]; then
+            echo "❌ One or more gates failed — not safe to submit to Partner Center"
+            exit 1
+          fi
+          echo "✅ All Marketplace container gates passed — safe to submit to Partner Center"
