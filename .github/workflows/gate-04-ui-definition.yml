@@ -12,10 +12,13 @@ jobs:
         run: |
           OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
           FILE="$OFFER_DIR/createUIDefinition.json"
-          python3 -c "import json,sys; d=json.load(open('$FILE')); \
-            assert 'outputs' in d, 'Missing outputs section'; \
-            schema = d.get('\$schema',''); \
-            assert 'azure.com' in schema or 'azure.com' in schema.lower(), \
-              f'Invalid schema: {schema}'; \
-            print('✅ createUIDefinition.json valid'); \
-            print(f'  outputs keys: {list(d[\"outputs\"].keys())}')"
+          python3 -c "
+import json,sys
+with open('$FILE') as f: d=json.load(f)
+# outputs can be top-level or inside parameters
+outputs = d.get('outputs') or d.get('parameters',{}).get('outputs')
+assert outputs, 'Missing outputs section (checked root and parameters.outputs)'
+assert 'azure.com' in d.get('\$schema','').lower(), 'Invalid schema: ' + d.get('\$schema','')
+print('\u2705 createUIDefinition.json valid')
+print(f'  outputs keys: {list(outputs.keys())}')
+"
