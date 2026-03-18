@@ -18,9 +18,16 @@ ext_type    = manifest.get('clusterExtensionType',
               manifest.get('extensionRegistrationParameters',{}).get('clusterExtensionType',''))
 
 def get_token():
-    r = subprocess.run(
-        ['az','account','get-access-token','--resource','https://graph.microsoft.com','--output','json'],
-        capture_output=True, text=True)
+    # Use PC tenant explicitly (a42a9fb4) — the CI SP may be in a different tenant
+    PC_TENANT = 'a42a9fb4-e76a-4b34-b070-3bf3687022f0'
+    r = subprocess.run([
+        'az','account','get-access-token',
+        '--resource','https://graph.microsoft.com',
+        '--tenant', PC_TENANT,
+        '--output','json'
+    ], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f'az account get-access-token failed: {r.stderr}')
     return json.loads(r.stdout).get('accessToken')
 
 base  = "https://graph.microsoft.com/rp/product-ingestion"

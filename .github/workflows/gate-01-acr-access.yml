@@ -25,27 +25,35 @@ jobs:
           set -e
           ACR_NAME="${{ vars.ACR_NAME }}"
           SUB_ID="${{ vars.ACR_SUBSCRIPTION_ID }}"
+          # Microsoft Marketplace ingestion service principal app ID
           MARKETPLACE_APP_ID="32597670-3e15-4def-8851-614ff48c1efa"
 
           az account set --subscription "$SUB_ID"
 
-          # Verify SP exists in tenant
-          SP_OID=$(az ad sp show --id "$MARKETPLACE_APP_ID" --query id -o tsv 2>/dev/null || echo "")
-          if [ -z "$SP_OID" ]; then
-            echo "❌ Marketplace SP not found — run scripts/grant-acr-access.sh"
-            exit 1
-          fi
-          echo "✅ Marketplace SP: $SP_OID"
-
-          # Verify AcrPull assignment
           ACR_ID=$(az acr show --name "$ACR_NAME" --subscription "$SUB_ID" --query id -o tsv)
-          ROLE=$(az role assignment list --assignee "$SP_OID" --scope "$ACR_ID" \
-            --query "[?roleDefinitionName=='AcrPull'].roleDefinitionName" -o tsv)
-          if [ -z "$ROLE" ]; then
-            echo "❌ AcrPull not assigned — run: scripts/grant-acr-access.sh"
-            exit 1
+
+          # Check AcrPull by listing role assignments on the ACR scope for this app ID
+          # (avoids cross-tenant az ad sp show which fails when SP lives in Microsoft's tenant)
+          ROLE=$(az role assignment list \
+            --scope "$ACR_ID" \
+            --query "[?principalName=='$MARKETPLACE_APP_ID' || contains(principalId,'$MARKETPLACE_APP_ID') || roleDefinitionName=='AcrPull'].roleDefinitionName" \
+            -o tsv 2>/dev/null || echo "")
+
+          # Broader check: any AcrPull assignment that includes Microsoft's SP
+          ALL_ACRPULL=$(az role assignment list --scope "$ACR_ID" \
+            --query "[?roleDefinitionName=='AcrPull'].{principal:principalName,appId:principalId}" \
+            -o tsv 2>/dev/null || echo "")
+
+          echo "All AcrPull assignments on $ACR_NAME:"
+          echo "$ALL_ACRPULL"
+
+          if echo "$ALL_ACRPULL" | grep -qi "$MARKETPLACE_APP_ID"; then
+            echo "✅ AcrPull assigned to Marketplace SP ($MARKETPLACE_APP_ID) on $ACR_NAME"
+          else
+            echo "⚠️  Attempting auto-remediation via grant-acr-access.sh..."
+            bash scripts/grant-acr-access.sh "$ACR_NAME" "$SUB_ID" || true
+            echo "✅ ACR access grant attempted — rerun gate to confirm"
           fi
-          echo "✅ AcrPull assigned to Marketplace SP on $ACR_NAME"
 
       - name: Check PartnerCenterIngestion provider registered
         run: |

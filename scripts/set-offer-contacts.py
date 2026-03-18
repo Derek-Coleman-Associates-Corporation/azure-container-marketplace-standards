@@ -7,9 +7,15 @@ import argparse, json, os, subprocess, sys, time
 import requests
 
 def get_graph_token():
-    r = subprocess.run(
-        ['az','account','get-access-token','--resource','https://graph.microsoft.com','--output','json'],
-        capture_output=True, text=True)
+    PC_TENANT = 'a42a9fb4-e76a-4b34-b070-3bf3687022f0'
+    r = subprocess.run([
+        'az','account','get-access-token',
+        '--resource','https://graph.microsoft.com',
+        '--tenant', PC_TENANT,
+        '--output','json'
+    ], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f'az token failed: {r.stderr}')
     return json.loads(r.stdout).get('accessToken')
 
 def poll(base, apiv, headers, job_id, retries=20):

@@ -1,11 +1,12 @@
 applicationName: com.dcassociatesgroup.ubuntustarter
-publisher: "DCAssociatesGroup"
-description: "Ubuntu 24.04 LTS Enterprise Edition — AKS-Optimised"
+publisher: DCAssociatesGroup
+description: "Ubuntu 24.04 LTS Enterprise Edition \u2014 AKS-Optimised"
 version: 0.1.2
-helmChart: "./helm"
-clusterArmTemplate: "./mainTemplate.json"
-uiDefinition: "./createUIDefinition.json"
-registryServer: "dcaicontaineroffers.azurecr.io"
+helmChart: ./helm
+clusterArmTemplate: ./mainTemplate.json
+uiDefinition: ./createUIDefinition.json
+registryServer: dcaicontaineroffers.azurecr.io
 extensionRegistrationParameters:
-  defaultScope: "cluster"
-  namespace: "ubuntu-starter"
+  defaultScope: cluster
+  namespace: ubuntu-starter
+clusterExtensionType: DCAssociatesGroup.UbuntuEnterprise
