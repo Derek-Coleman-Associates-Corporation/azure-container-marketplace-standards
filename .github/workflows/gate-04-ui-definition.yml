@@ -10,15 +10,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate createUIDefinition.json
         run: |
-          OFFER_DIR="${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
-          FILE="$OFFER_DIR/createUIDefinition.json"
-          python3 -c "
-import json,sys
-with open('$FILE') as f: d=json.load(f)
-# outputs can be top-level or inside parameters
-outputs = d.get('outputs') or d.get('parameters',{}).get('outputs')
-assert outputs, 'Missing outputs section (checked root and parameters.outputs)'
-assert 'azure.com' in d.get('\$schema','').lower(), 'Invalid schema: ' + d.get('\$schema','')
-print('\u2705 createUIDefinition.json valid')
-print(f'  outputs keys: {list(outputs.keys())}')
-"
+          python3 scripts/validate-ui-definition.py \
+            "${{ inputs.offer_dir || 'examples/ubuntu-starter' }}"
