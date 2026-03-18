@@ -1,13 +1,18 @@
 name: "Gate 09 — Partner Center API Schema"
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   push:
     branches: [main]
     paths: ['examples/**']
 jobs:
   pc-api-schema:
     runs-on: ubuntu-latest
-    continue-on-error: true
+
     steps:
       - uses: actions/checkout@v4
       - name: Az login with Partner Center SP

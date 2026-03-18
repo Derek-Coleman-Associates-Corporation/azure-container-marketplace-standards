@@ -1,6 +1,11 @@
 name: "Gate 04 — createUIDefinition"
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   pull_request:
     paths: ['examples/**']
 jobs:

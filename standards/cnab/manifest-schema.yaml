@@ -1,0 +1,35 @@
+# CNAB Manifest Schema
+# Source of truth for what fields are required in manifest.yaml
+# Reference: https://aka.ms/K8sOfferManifest
+---
+$schema: "manifest-schema/v1"
+required_fields:
+  - applicationName       # string: "PublisherName.AppName" format
+  - version               # string: semver format "#.#.#"
+  - registryServer        # string: FQDN of ACR, e.g. dcaicontaineroffers.azurecr.io
+  - clusterExtensionType  # string: "PublisherName.AppName", max 50 chars
+  - allowedClusterTypes:
+      - ConnectedCluster
+      - ManagedCluster
+
+field_constraints:
+  applicationName:
+    pattern: "^[A-Za-z0-9]+\\.[A-Za-z0-9]+$"
+    description: "Must be PublisherName.AppName (dot-separated, alphanumeric only)"
+  version:
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+    description: "Must be semver format: #.#.#"
+  clusterExtensionType:
+    pattern: "^[A-Za-z0-9]+\\.[A-Za-z0-9]+$"
+    max_length: 50
+    description: "Must be PublisherName.AppName, max 50 characters"
+  registryServer:
+    pattern: "^[a-z0-9]+\\.azurecr\\.io$"
+    description: "Must be an Azure Container Registry FQDN"
+
+banned_fields:
+  - templateLink          # Linked ARM templates are not supported
+
+references:
+  - https://aka.ms/K8sOfferManifest
+  - https://learn.microsoft.com/en-us/azure/marketplace/azure-container-technical-assets-kubernetes

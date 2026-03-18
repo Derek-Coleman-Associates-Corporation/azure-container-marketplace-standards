@@ -6,52 +6,89 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      offer_dir:
+        description: "Path to offer directory (e.g. examples/my-offer)"
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
+  workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
 
 jobs:
   gate-01-acr-access:
     uses: ./.github/workflows/gate-01-acr-access.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
     secrets: inherit
 
   gate-02-artifact-structure:
     uses: ./.github/workflows/gate-02-artifact-structure.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-03-helm-lint:
     needs: [gate-02-artifact-structure]
     uses: ./.github/workflows/gate-03-helm-lint.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-04-ui-definition:
     needs: [gate-02-artifact-structure]
     uses: ./.github/workflows/gate-04-ui-definition.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-05-arm-template:
     needs: [gate-02-artifact-structure]
     uses: ./.github/workflows/gate-05-arm-template.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-06-cpa-verify:
     needs: [gate-02-artifact-structure, gate-03-helm-lint, gate-04-ui-definition, gate-05-arm-template]
     uses: ./.github/workflows/gate-06-cpa-verify.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-07-cpa-build:
     needs: [gate-06-cpa-verify]
     uses: ./.github/workflows/gate-07-cpa-build.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
     secrets: inherit
 
   gate-08-cluster-ext-type:
     uses: ./.github/workflows/gate-08-cluster-ext-type.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
 
   gate-09-pc-api-schema:
     needs: [gate-07-cpa-build, gate-08-cluster-ext-type]
     uses: ./.github/workflows/gate-09-pc-api-schema.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
     secrets: inherit
 
   gate-10-offer-listing:
     uses: ./.github/workflows/gate-10-offer-listing.yml
+    with:
+      offer_dir: ${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
     secrets: inherit
 
   all-gates-pass:
     name: "✅ All Marketplace Gates Passed"
     needs:
       - gate-01-acr-access
+      - gate-02-artifact-structure
+      - gate-03-helm-lint
+      - gate-04-ui-definition
+      - gate-05-arm-template
+      - gate-06-cpa-verify
       - gate-07-cpa-build
       - gate-08-cluster-ext-type
       - gate-09-pc-api-schema
@@ -61,17 +98,34 @@ jobs:
     steps:
       - name: Check all gates passed
         run: |
-          echo "Gate 01 (ACR Access):      ${{ needs.gate-01-acr-access.result }}"
-          echo "Gate 07 (cpa buildbundle): ${{ needs.gate-07-cpa-build.result }}"
-          echo "Gate 08 (ExtType):         ${{ needs.gate-08-cluster-ext-type.result }}"
-          echo "Gate 09 (PC API Schema):   ${{ needs.gate-09-pc-api-schema.result }}"
-          echo "Gate 10 (Offer Listing):   ${{ needs.gate-10-offer-listing.result }}"
-          if [[ "${{ needs.gate-01-acr-access.result }}" == "failure" || \
-                "${{ needs.gate-07-cpa-build.result }}" == "failure" || \
-                "${{ needs.gate-08-cluster-ext-type.result }}" == "failure" || \
-                "${{ needs.gate-09-pc-api-schema.result }}" == "failure" || \
-                "${{ needs.gate-10-offer-listing.result }}" == "failure" ]]; then
-            echo "❌ One or more gates failed — not safe to submit to Partner Center"
+          echo "Gate 01 (ACR Access):          ${{ needs.gate-01-acr-access.result }}"
+          echo "Gate 02 (Artifact Structure):  ${{ needs.gate-02-artifact-structure.result }}"
+          echo "Gate 03 (Helm Lint):           ${{ needs.gate-03-helm-lint.result }}"
+          echo "Gate 04 (UI Definition):       ${{ needs.gate-04-ui-definition.result }}"
+          echo "Gate 05 (ARM Template):        ${{ needs.gate-05-arm-template.result }}"
+          echo "Gate 06 (cpa verify):          ${{ needs.gate-06-cpa-verify.result }}"
+          echo "Gate 07 (cpa buildbundle):     ${{ needs.gate-07-cpa-build.result }}"
+          echo "Gate 08 (ExtType):             ${{ needs.gate-08-cluster-ext-type.result }}"
+          echo "Gate 09 (PC API Schema):       ${{ needs.gate-09-pc-api-schema.result }}"
+          echo "Gate 10 (Offer Listing):       ${{ needs.gate-10-offer-listing.result }}"
+          FAILED=0
+          for result in \
+            "${{ needs.gate-01-acr-access.result }}" \
+            "${{ needs.gate-02-artifact-structure.result }}" \
+            "${{ needs.gate-03-helm-lint.result }}" \
+            "${{ needs.gate-04-ui-definition.result }}" \
+            "${{ needs.gate-05-arm-template.result }}" \
+            "${{ needs.gate-06-cpa-verify.result }}" \
+            "${{ needs.gate-07-cpa-build.result }}" \
+            "${{ needs.gate-08-cluster-ext-type.result }}" \
+            "${{ needs.gate-09-pc-api-schema.result }}" \
+            "${{ needs.gate-10-offer-listing.result }}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              FAILED=$((FAILED+1))
+            fi
+          done
+          if [[ $FAILED -gt 0 ]]; then
+            echo "❌ $FAILED gate(s) failed — not safe to submit to Partner Center"
             exit 1
           fi
-          echo "✅ All Marketplace container gates passed — safe to submit to Partner Center"
+          echo "✅ All 10 Marketplace container gates passed — safe to submit to Partner Center"

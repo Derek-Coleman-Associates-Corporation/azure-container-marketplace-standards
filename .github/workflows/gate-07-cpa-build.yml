@@ -1,6 +1,11 @@
 name: "Gate 07 — cpa buildbundle"
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   push:
     branches: [main]
     paths: ['examples/**']
@@ -10,6 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build CNAB Bundle and Publish to ACR
+        id: cpa-build
         uses: addnab/docker-run-action@v3
         with:
           image: mcr.microsoft.com/container-package-app:latest
@@ -25,6 +31,8 @@ jobs:
               -u 00000000-0000-0000-0000-000000000000 --password-stdin
             cpa verify
             cpa buildbundle
+            TAG=$(cpa buildbundle 2>&1 | grep -oP '(?<=digest: )sha256:[a-f0-9]+' | head -1 || true)
+            echo "acr_tag=${TAG}" >> $GITHUB_OUTPUT
             echo "✅ CNAB bundle built and pushed to ${{ vars.ACR_NAME }}"
     outputs:
       acr_tag: ${{ steps.cpa-build.outputs.acr_tag }}

@@ -2,6 +2,11 @@ name: "Gate 02 — Artifact Structure"
 
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   pull_request:
     paths: ['examples/**']
 

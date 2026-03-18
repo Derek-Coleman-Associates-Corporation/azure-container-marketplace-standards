@@ -1,0 +1,34 @@
+# Helm Values Schema — Azure Marketplace Container Offer
+# Source of truth for required values.yaml structure
+# Reference: https://learn.microsoft.com/en-us/azure/marketplace/azure-container-technical-assets-kubernetes
+---
+$schema: "helm-values-schema/v1"
+
+required_global_structure:
+  # All container images MUST be referenced under global.azure.images
+  # so the Marketplace can substitute them from ACR at deploy time
+  global:
+    azure:
+      images:
+        # Each image entry must follow this structure:
+        # <image-key>:
+        #   registry: ""          # injected by Marketplace at deploy
+        #   image: ""             # injected by Marketplace at deploy
+        #   digest: ""            # injected by Marketplace at deploy
+        #   tag: ""               # injected by Marketplace at deploy
+        _description: >
+          Each application image must have an entry here keyed by a
+          descriptive name. The Marketplace will inject registry/image/digest/tag
+          at customer deployment time from your cnabReferences.
+
+pattern_enforcement:
+  global.azure.images:
+    validation_script: "scripts/validate-global-images.py"
+    description: >
+      The validate-global-images.py script checks that values.yaml contains
+      at least one entry under global.azure.images and that the Helm chart
+      references these values correctly.
+
+references:
+  - https://learn.microsoft.com/en-us/azure/marketplace/azure-container-technical-assets-kubernetes
+  - https://aka.ms/K8sOfferManifest

@@ -2,7 +2,17 @@ name: "Gate 01 — ACR Access"
 
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   workflow_dispatch:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   pull_request:
     paths:
       - 'examples/**'

@@ -1,0 +1,20 @@
+{
+  "$schema": "allowed-arm-resource-types/v1",
+  "description": "Azure Marketplace Kubernetes container offers may ONLY reference these ARM resource types in mainTemplate.json. Any other resource type will cause Partner Center certification failure.",
+  "references": [
+    "https://learn.microsoft.com/en-us/azure/marketplace/azure-container-technical-assets-kubernetes"
+  ],
+  "allowed_resource_types": [
+    "Microsoft.ContainerService/managedClusters",
+    "Microsoft.KubernetesConfiguration/extensions"
+  ],
+  "banned_patterns": [
+    "Microsoft.Resources/deployments",
+    "templateLink"
+  ],
+  "notes": [
+    "managedClusters: the AKS cluster resource reference",
+    "extensions: the cluster extension that installs your application",
+    "Linked ARM templates (templateLink) are explicitly NOT supported"
+  ]
+}

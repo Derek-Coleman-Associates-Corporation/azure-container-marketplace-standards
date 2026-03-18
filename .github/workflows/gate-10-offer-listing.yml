@@ -1,12 +1,17 @@
 name: "Gate 10 — Offer Listing + Contacts"
 on:
   workflow_call:
+    inputs:
+      offer_dir:
+        required: false
+        type: string
+        default: "examples/ubuntu-starter"
   push:
     branches: [main]
 jobs:
   offer-listing:
     runs-on: ubuntu-latest
-    continue-on-error: true
+
     steps:
       - uses: actions/checkout@v4
       - name: Az login with Partner Center SP
