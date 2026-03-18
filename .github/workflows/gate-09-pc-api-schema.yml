@@ -9,16 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Validate cnabReferences via Partner Center API
+      - name: Az login with Partner Center SP
         env:
           PC_CLIENT_ID: ${{ secrets.PC_CLIENT_ID }}
           PC_CLIENT_SECRET: ${{ secrets.PC_CLIENT_SECRET }}
           PC_TENANT_ID: ${{ secrets.PC_TENANT_ID }}
+        run: |
+          az login --service-principal \
+            -u "$PC_CLIENT_ID" \
+            -p "$PC_CLIENT_SECRET" \
+            --tenant "$PC_TENANT_ID" \
+            --output none
+          echo "✅ Logged in as Partner Center SP"
+      - name: Validate cnabReferences via Partner Center API
+        env:
           ACR_SUB_ID: ${{ vars.ACR_SUBSCRIPTION_ID }}
           ACR_NAME: ${{ vars.ACR_NAME }}
+          PC_TENANT_ID: ${{ secrets.PC_TENANT_ID }}
         run: |
           pip -q install requests pyyaml
           python3 scripts/validate-pc-api.py \
