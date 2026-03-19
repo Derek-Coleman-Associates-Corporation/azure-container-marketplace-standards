@@ -17,5 +17,6 @@ spec:
         - name: ubuntu-starter
           # Always reference via global.azure.images — Microsoft retags on publish
           image: "{{ .Values.global.azure.images.ubuntuStarter.registry }}/{{ .Values.global.azure.images.ubuntuStarter.image }}:{{ .Values.global.azure.images.ubuntuStarter.tag }}"
+          command: ["sleep", "infinity"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
