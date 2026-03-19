@@ -6,6 +6,7 @@
     "clusterResourceId": { "type": "string" }
   },
   "variables": {
+    "plan-name": "ubuntu-starter",
     "plan-publisher": "dcassociatesgroup",
     "plan-offerID": "ubuntu-starter",
     "releaseTrain": "stable",
