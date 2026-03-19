@@ -10,7 +10,20 @@
         }
       }
     },
-    "basics": [],
+    "basics": [
+      {
+        "name": "clusterResourceId",
+        "type": "Microsoft.Common.TextBox",
+        "label": "AKS Cluster Resource ID",
+        "toolTip": "Full resource ID of the AKS managed cluster where the extension will be installed.",
+        "defaultValue": "",
+        "constraints": {
+          "required": true,
+          "regex": "^/subscriptions/.+/resourceGroups/.+/providers/Microsoft.ContainerService/managedClusters/.+$",
+          "validationMessage": "Must be a valid AKS managed cluster resource ID."
+        }
+      }
+    ],
     "steps": [
       {
         "name": "applicationDetails",
@@ -20,19 +33,20 @@
             "name": "extensionResourceName",
             "type": "Microsoft.Common.TextBox",
             "label": "Extension Resource Name",
+            "toolTip": "Name for the Kubernetes extension resource that will be created on the cluster.",
             "defaultValue": "ubuntu-starter",
             "constraints": {
               "required": true,
-              "regex": "^[a-z0-9]{6,30}$",
-              "validationMessage": "Lowercase alphanumeric, 6-30 characters"
+              "regex": "^[a-z0-9-]{3,30}$",
+              "validationMessage": "Lowercase alphanumeric and hyphens, 3-30 characters."
             }
           }
         ]
       }
     ],
     "outputs": {
-      "location": "[location()]",
-      "extensionResourceName": "[steps('applicationDetails').extensionResourceName]"
+      "extensionResourceName": "[steps('applicationDetails').extensionResourceName]",
+      "clusterResourceId": "[basics('clusterResourceId')]"
     }
   }
 }
