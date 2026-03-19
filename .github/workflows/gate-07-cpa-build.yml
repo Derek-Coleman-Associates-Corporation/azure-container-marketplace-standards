@@ -25,7 +25,7 @@ jobs:
               docker login ${{ vars.ACR_NAME }}.azurecr.io \
               -u ${{ vars.ACR_NAME }} --password-stdin
             cpa verify
-            cpa buildbundle
+            cpa buildbundle --force
             echo "✅ CNAB bundle built and pushed to ${{ vars.ACR_NAME }}"
     outputs:
       acr_tag: ${{ steps.cpa-build.outputs.acr_tag }}
