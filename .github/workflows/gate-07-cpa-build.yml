@@ -19,10 +19,11 @@ jobs:
             -v ${{ github.workspace }}:/data
             --entrypoint "/bin/bash"
           run: |
+            set -euo pipefail
             cd /data/${{ inputs.offer_dir || 'examples/ubuntu-starter' }}
             echo ${{ secrets.ACR_TOKEN }} | \
               docker login ${{ vars.ACR_NAME }}.azurecr.io \
-              -u 00000000-0000-0000-0000-000000000000 --password-stdin
+              -u ${{ vars.ACR_NAME }} --password-stdin
             cpa verify
             cpa buildbundle
             echo "✅ CNAB bundle built and pushed to ${{ vars.ACR_NAME }}"
