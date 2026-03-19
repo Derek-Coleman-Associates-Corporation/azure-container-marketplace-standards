@@ -20,7 +20,7 @@
       "scope": "[parameters('clusterResourceId')]",
       "kind": "ClusterExtension",
       "plan": {
-        "name": "[variables('plan-offerID')]",
+        "name": "[variables('plan-name')]",
         "publisher": "[variables('plan-publisher')]",
         "product": "[variables('plan-offerID')]"
       },
