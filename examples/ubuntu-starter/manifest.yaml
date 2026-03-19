@@ -9,4 +9,4 @@ registryServer: dcaicontaineroffers.azurecr.io
 extensionRegistrationParameters:
   defaultScope: cluster
   namespace: ubuntu-starter
-clusterExtensionType: DCAssociatesGroup.UbuntuEnterprise
+clusterExtensionType: DCAssociatesGroup.UbuntuStarter

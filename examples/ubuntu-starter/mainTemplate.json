@@ -10,7 +10,7 @@
     "plan-publisher": "dcassociatesgroup",
     "plan-offerID": "ubuntu-starter",
     "releaseTrain": "stable",
-    "clusterExtensionTypeName": "DCAssociatesGroup.UbuntuEnterprise"
+    "clusterExtensionTypeName": "DCAssociatesGroup.UbuntuStarter"
   },
   "resources": [
     {
